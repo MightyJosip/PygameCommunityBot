@@ -86,6 +86,18 @@ GENERIC = False
 
 UNIQUE_POLL_MSG = "You cannot make multiple votes in this poll\n"
 
+DEFAULT_SCOREBOARD_TYPE = "relative"
+DEFAULT_SCOREBOARDS = {
+    "relative": (
+        (":first_place: First place!", 1),
+        (":second_place: Second place!", 1),
+        (":third_place: Third place!", 1),
+        (":military_medal: Consolation place!", 2),
+        ("Challengers!", 100000),
+    ),
+    # TODO: add more default formats here
+}
+
 
 class ServerConstants:
     """

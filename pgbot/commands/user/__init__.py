@@ -746,3 +746,98 @@ class UserCommand(FunCommand, HelpCommand):
         except discord.errors.NotFound:
             pass
         await self.channel.send(f"<@!{self.author.id}> is gonna stream!\n{msg}\n{ping}")
+
+    @add_group("scoreboard")
+    async def cmd_scoreboard(
+        self, round_no: Optional[int] = None, event: Optional[String] = None
+    ):
+        """
+        ->type Other commands
+        ->signature pg!scoreboard [round_no] [event]
+        ->description Show scoreboard of events
+        ->extended description
+        Argument `round_no` is an optional integer, that specifies which round
+        of the event, the scoreboard should be displayed. If unspecified, shows
+        the total scoreboard of all rounds combined.
+        Argument `event` is the string name of the event to display the scoreboard
+        for, if unspecified, shows the scoreboard of any active event
+        -----
+        """
+        async with db.DiscordDB("events") as db_obj:
+            db_dict = db_obj.get({})
+
+        if event is not None:
+            event_name = event.string
+            try:
+                events_dict = db_dict[event_name]
+            except KeyError:
+                raise BotException(
+                    "Could not check scoreboard!",
+                    f"Event '{event_name}' does not exist",
+                ) from None
+        else:
+            for event_name, events_dict in db_dict.items():
+                if events_dict["is_active"]:
+                    break
+            else:
+                raise BotException(
+                    "Could not check scoreboard!",
+                    "There are no active events right now :(\nCheck back later!",
+                )
+
+        if not events_dict["rounds"]:
+            raise BotException(
+                "Could not check scoreboard!",
+                f"Event '{event_name}' has not started yet!",
+            )
+
+        fields = []
+        if round_no is None:
+            rounds_dict = {
+                "scores": {},
+                "ranking": events_dict["ranking"],
+                "ranking_type": events_dict["ranking_type"],
+            }
+
+            for round_dict in events_dict["rounds"]:
+                for mem, scores in round_dict["scores"].items():
+                    try:
+                        rounds_dict["scores"][mem] += sum(scores)
+                    except KeyError:
+                        rounds_dict["scores"][mem] = sum(scores)
+
+        else:
+            try:
+                rounds_dict = events_dict["rounds"][round_no - 1]
+            except IndexError:
+                raise BotException(
+                    "Could not check scoreboard!",
+                    f"Event '{event_name}' does not have round {round_no} (yet)!",
+                ) from None
+
+            for mem, scores in rounds_dict["scores"].items():
+                rounds_dict["scores"][mem] = sum(scores)
+
+            fields.append((rounds_dict["name"], rounds_dict["description"], False))
+
+        if rounds_dict["scores"]:
+            fields.extend(
+                utils.split_scores(
+                    rounds_dict["scores"],
+                    rounds_dict["ranking"],
+                    rounds_dict["ranking_type"],
+                )
+            )
+
+        else:
+            fields.append(
+                ("There are no scores yet!", "Check back after sometime!", False)
+            )
+
+        await embed_utils.replace(
+            self.response_msg,
+            title=f"Event: {event_name}",
+            description=events_dict["description"],
+            fields=fields,
+            color=0xFF8C00,
+        )
