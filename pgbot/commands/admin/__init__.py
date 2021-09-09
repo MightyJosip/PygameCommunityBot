@@ -1558,7 +1558,7 @@ class AdminCommand(UserCommand, SudoCommand, EmsudoCommand):
         if ranking is None:
             ranking = common.DEFAULT_SCOREBOARDS[ranking_type]
 
-        async with db.DiscordDB("events") as db_obj:
+        async with db.DiscordDB("scoreboard") as db_obj:
             db_dict = db_obj.get({})
             if event.string not in db_dict:
                 db_dict[event.string] = {}
@@ -1607,7 +1607,7 @@ class AdminCommand(UserCommand, SudoCommand, EmsudoCommand):
         if ranking is None:
             ranking = common.DEFAULT_SCOREBOARDS[ranking_type]
 
-        async with db.DiscordDB("events") as db_obj:
+        async with db.DiscordDB("scoreboard") as db_obj:
             db_dict = db_obj.get({})
             try:
                 db_dict[event.string]["rounds"].append(
@@ -1645,7 +1645,7 @@ class AdminCommand(UserCommand, SudoCommand, EmsudoCommand):
         ->description Remove an event round
         -----
         """
-        async with db.DiscordDB("events") as db_obj:
+        async with db.DiscordDB("scoreboard") as db_obj:
             db_dict = db_obj.get({})
             try:
                 name = db_dict[event.string].pop(round_no - 1)["name"]
@@ -1679,7 +1679,7 @@ class AdminCommand(UserCommand, SudoCommand, EmsudoCommand):
         -----
         """
         round_no -= 1
-        async with db.DiscordDB("events") as db_obj:
+        async with db.DiscordDB("scoreboard") as db_obj:
             db_dict = db_obj.get({})
             try:
                 if scores is None:

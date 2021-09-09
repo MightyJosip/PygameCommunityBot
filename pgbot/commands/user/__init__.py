@@ -763,7 +763,7 @@ class UserCommand(FunCommand, HelpCommand):
         for, if unspecified, shows the scoreboard of any active event
         -----
         """
-        async with db.DiscordDB("events") as db_obj:
+        async with db.DiscordDB("scoreboard") as db_obj:
             db_dict = db_obj.get({})
 
         if event is not None:
